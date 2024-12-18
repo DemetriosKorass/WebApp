@@ -1,0 +1,21 @@
+﻿@model WebApp.DAL.Entities.User
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<h1 class="my-4">Create a New User</h1>
+
+<form asp-action="Create" method="post" class="card p-3" style="max-width: 800px;">
+    <div class="mb-3">
+        <label for="Name" class="form-label">Name:</label>
+        <input type="text" id="Name" name="Name" class="form-control" value="@Model?.Name" />
+    </div>
+    <div class="mb-3">
+        <label for="Email" class="form-label">Email:</label>
+        <input type="email" id="Email" name="Email" class="form-control" value="@Model?.Email" />
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success btn-sm">Create</button>
+        <a href="/Users" class="btn btn-secondary btn-sm">Cancel</a>
+    </div>
+</form>

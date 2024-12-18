@@ -1,0 +1,30 @@
+﻿@model List<WebApp.DAL.Entities.Task>
+@{
+    ViewData["Title"] = "Tasks";
+}
+
+<h1 class="my-4">Tasks</h1>
+<p>
+    <a class="btn btn-primary btn-sm mb-3" href="/Tasks/Create">Create New Task</a>
+</p>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Name</th>
+            <th style="width:100px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var task in Model)
+        {
+            <tr>
+                <td>@task.Name</td>
+                <td>
+                    <a class="btn btn-warning btn-sm" href="/Tasks/Edit/@task.Id">Edit</a>
+                    <a class="btn btn-danger btn-sm" href="/Tasks/Delete/@task.Id">X</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
