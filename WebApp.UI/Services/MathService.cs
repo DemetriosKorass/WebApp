@@ -1,12 +1,8 @@
 ﻿namespace WebApp.UI.Services
 {
-    public class CalculationEventArgs : EventArgs
+    public class CalculationEventArgs(double result) : EventArgs
     {
-        public double Result { get; }
-        public CalculationEventArgs(double result)
-        {
-            Result = result;
-        }
+        public double Result { get; } = result;
     }
 
     public class MathService

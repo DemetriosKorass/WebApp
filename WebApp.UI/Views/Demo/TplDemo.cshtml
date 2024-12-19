@@ -1,0 +1,18 @@
+﻿@{
+    ViewData["Title"] = "TPL Demo";
+    var results = ViewBag.Results as List<string>;
+}
+<h1>Task Parallel Library (TPL) Demo</h1>
+@if (results != null && results.Count > 0)
+{
+    <ul>
+        @foreach (var r in results)
+        {
+            <li>@r</li>
+        }
+    </ul>
+}
+else
+{
+    <p>No data to display.</p>
+}

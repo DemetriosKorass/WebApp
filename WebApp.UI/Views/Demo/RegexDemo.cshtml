@@ -1,0 +1,97 @@
+﻿@model WebApp.UI.ViewModels.RegexDemoViewModel
+
+@{
+    ViewData["Title"] = "Regular Expressions Demo";
+}
+
+<h1 class="my-4">Regular Expressions Demo</h1>
+
+<form asp-action="RegexDemo" method="post" class="card p-3" style="max-width: 800px;">
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label asp-for="InputText" class="form-label"></label>
+        <textarea asp-for="InputText" class="form-control" rows="4"
+                  style="overflow:auto; resize:vertical;"></textarea>
+        <span asp-validation-for="InputText" class="text-danger"></span>
+    </div>
+
+    <hr />
+
+    <div class="mb-3">
+        <h5>Validation</h5>
+        <p>Is valid email: <strong>@(Model.IsValidEmail ? "Yes" : "No")</strong></p>
+    </div>
+
+    <hr />
+
+    <div class="mb-3">
+        <h5>Find and Replace</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <label asp-for="FindPattern" class="form-label"></label>
+                <input asp-for="FindPattern" class="form-control" placeholder="e.g., foo" />
+            </div>
+            <div class="col-md-6">
+                <label asp-for="ReplaceWith" class="form-label"></label>
+                <input asp-for="ReplaceWith" class="form-control" placeholder="e.g., bar" />
+            </div>
+        </div>
+        <p>Result: <em>@Model.ReplaceResult</em></p>
+    </div>
+
+    <hr />
+
+    <div class="mb-3">
+        <h5>Split String</h5>
+        <label asp-for="SplitPattern" class="form-label"></label>
+        <input asp-for="SplitPattern" class="form-control" placeholder="e.g., \s+|,|;" />
+        <p>Result:</p>
+        <ul>
+            @if (Model.SplitResult != null && Model.SplitResult.Length > 0)
+            {
+                foreach (var item in Model.SplitResult)
+                {
+                    <li>@item</li>
+                }
+            }
+            else
+            {
+                <li>No results to display.</li>
+            }
+        </ul>
+    </div>
+
+    <hr />
+
+    <div class="mb-3">
+        <h5>Parse Data using Groups</h5>
+        <label asp-for="ParsePattern" class="form-label"></label>
+        <input asp-for="ParsePattern" class="form-control" placeholder="e.g., (?<Year>\d{4})-(?<Month>\d{2})-(?<Day>\d{2})" />
+        <p>Parsed Groups:</p>
+        <ul>
+            @if (Model.ParsedGroups != null && Model.ParsedGroups.Count > 0)
+            {
+                foreach (var group in Model.ParsedGroups)
+                {
+                    <li><strong>@group.GroupName</strong>: @group.Value</li>
+                }
+            }
+            else
+            {
+                <li>No groups were parsed.</li>
+            }
+        </ul>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm">Run Regex Operations</button>
+        <a href="@Url.Action("RegexDemo", "Demo")" class="btn btn-secondary btn-sm">Reset</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

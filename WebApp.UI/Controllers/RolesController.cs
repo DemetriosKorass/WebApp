@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using System.Threading;
 using WebApp.DAL;
 using WebApp.DAL.Entities;
 
@@ -21,6 +23,12 @@ namespace WebApp.UI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(Role role, [FromForm] string[] permissions)
         {
+            bool exists = await context.Tasks.AnyAsync(t => t.Name == role.Name);
+            if (exists)
+            {
+                ModelState.AddModelError("Name", "Task with this name already exists.");
+                return View(role);
+            }
             var combinedPermissions = permissions.Aggregate(Permissions.None, (acc, val) =>
                 acc |= Enum.Parse<Permissions>(val));
             role.Permissions = combinedPermissions;

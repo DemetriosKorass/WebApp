@@ -1,15 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using System.Dynamic;
 using System.Runtime.InteropServices;
-using WebApp.UI;
 using WebApp.UI.Exceptions;
 using WebApp.UI.Services;
 using WebApp.DAL.Entities;
+using Task = System.Threading.Tasks.Task;
+using System.Text.RegularExpressions;
+using WebApp.UI.ViewModels;
 
 namespace WebApp.UI.Controllers
 {
@@ -112,8 +110,6 @@ namespace WebApp.UI.Controllers
             return View();
         }
 
-        // 2. StructLayout
-        // Example of a struct with explicit layout
         [StructLayout(LayoutKind.Sequential)]
         struct MyPoint
         {
@@ -128,7 +124,7 @@ namespace WebApp.UI.Controllers
             public void Deconstruct(out int x, out int y) { x = X; y = Y; }
         }
 
-        // Advanced Demo: Flags, StructLayout, bitwise, dynamic, ExpandoObject, Records, Deconstruction, Logical Patterns
+
         public IActionResult AdvancedDemo()
         {
             var results = new List<string>();
@@ -142,13 +138,13 @@ namespace WebApp.UI.Controllers
             var p = new MyPoint { X = 10, Y = 20 };
             results.Add($"MyPoint: X={p.X}, Y={p.Y}");
 
-            // 3. Bitwise operators
+            // 2. Bitwise operators
             int a = 0b_0011;
             int b = 0b_0101;
             int c = a & b; // 0001
             results.Add($"Bitwise AND: {Convert.ToString(a, 2)} & {Convert.ToString(b, 2)} = {Convert.ToString(c, 2)}");
 
-            // shift
+            // 3.shift
             int shiftMe = 1;
             int leftShift = shiftMe << 3; // 8
             results.Add($"1 << 3 = {leftShift}");
@@ -191,15 +187,162 @@ namespace WebApp.UI.Controllers
             };
             results.Add($"Logical pattern result: {number} is {resultStr}");
 
-            // 8. Advanced Collections: HashSet, SortedSet, SortedDictionary, etc.
-            // Integration into core app: We'll show a HashSet usage in `TasksController.Create` below.
-            // Just a demo here:
+            // 8. Advanced Collections: HashSet
+
             HashSet<string> set = new HashSet<string> { "apple", "banana" };
-            set.Add("apple"); // duplicate won't add
+
+            set.Add("apple");
+
             results.Add("HashSet contains: " + string.Join(",", set));
 
             ViewBag.Results = results;
             return View();
+        }
+
+        public async Task<IActionResult> HeavyComputation(CancellationToken cancellationToken)
+        {
+            try
+            {
+                // Simulate heavy CPU-bound work
+                int result = await System.Threading.Tasks.Task.Run(() =>
+                {
+                    // Check for cancellation
+                    cancellationToken.ThrowIfCancellationRequested();
+                    int sum = 0;
+                    for (int i = 0; i < 1_000_000; i++)
+                    {
+                        sum += i;
+                        if (i % 100_000 == 0 && cancellationToken.IsCancellationRequested)
+                        {
+                            throw new OperationCanceledException();
+                        }
+                    }
+                    return sum;
+                }, cancellationToken);
+
+                ViewBag.Result = result;
+                return View();
+            }
+            catch (OperationCanceledException)
+            {
+                ViewBag.Result = "Computation was canceled.";
+                return View();
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Result = $"An error occurred: {ex.Message}";
+                return View();
+            }
+        }
+        public async Task<IActionResult> TplDemo()
+        {
+            var results = new List<string>();
+            var tasks = new List<Task>
+            {
+                Task.Run(() =>
+                {
+                    Thread.Sleep(1000);
+                    lock (results)
+                    {
+                        results.Add("Task 1 completed.");
+                    }
+                }),
+                Task.Run(() =>
+                {
+                    Thread.Sleep(1500);
+                    lock (results)
+                    {
+                        results.Add("Task 2 completed.");
+                    }
+                }),
+                Task.Run(() =>
+                {
+                    Thread.Sleep(500);
+                    lock (results)
+                    {
+                        results.Add("Task 3 completed.");
+                    }
+                })
+            };
+
+            await Task.WhenAll(tasks);
+
+            ViewBag.Results = results;
+            return View();
+        }
+        public IActionResult RegexDemo()
+        {
+            return View(new RegexDemoViewModel());
+        }
+
+
+        [HttpPost, ActionName("RegexDemo")]
+        [ValidateAntiForgeryToken]
+        public IActionResult RegexDemo(RegexDemoViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // 1. Validation: Check if InputText is a valid email
+            string emailPattern = @"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$";
+            model.IsValidEmail = Regex.IsMatch(model.InputText, emailPattern, RegexOptions.IgnoreCase);
+
+            // 2. Find and Replace
+            if (!string.IsNullOrWhiteSpace(model.FindPattern) && model.ReplaceWith != null)
+            {
+                try
+                {
+                    model.ReplaceResult = Regex.Replace(model.InputText, model.FindPattern, model.ReplaceWith, RegexOptions.IgnoreCase);
+                }
+                catch (RegexParseException ex)
+                {
+                    ModelState.AddModelError("", $"Find and Replace Error: {ex.Message}");
+                }
+            }
+
+            // 3. Split String
+            if (!string.IsNullOrWhiteSpace(model.SplitPattern))
+            {
+                try
+                {
+                    model.SplitResult = Regex.Split(model.InputText, model.SplitPattern, RegexOptions.IgnoreCase);
+                }
+                catch (RegexParseException ex)
+                {
+                    ModelState.AddModelError("", $"Split Error: {ex.Message}");
+                }
+            }
+
+            // 4. Parse Data using Groups
+            if (!string.IsNullOrWhiteSpace(model.ParsePattern))
+            {
+                try
+                {
+                    Match match = Regex.Match(model.InputText, model.ParsePattern, RegexOptions.IgnoreCase);
+                    if (match.Success)
+                    {
+                        foreach (Group group in match.Groups)
+                        {
+                            if (group.Name != "0" && !string.IsNullOrEmpty(group.Value))
+                            {
+                                model.ParsedGroups.Add(new ParsedGroup
+                                {
+                                    GroupName = group.Name,
+                                    Value = group.Value
+                                });
+                            }
+                        }
+                    }
+                }
+                catch (RegexParseException ex)
+                {
+                    ModelState.AddModelError("", $"Parse Error: {ex.Message}");
+                }
+            }
+
+            return View(model);
         }
     }
 }
