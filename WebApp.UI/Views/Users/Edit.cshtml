@@ -8,18 +8,18 @@
 
 <form asp-action="Edit" method="post" class="card p-3" style="max-width: 800px;">
     @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="User.Id" />
+    <input type="hidden" asp-for="UserId" />
 
     <div class="mb-3">
-        <label asp-for="User.Name" class="form-label">Name:</label>
-        <input asp-for="User.Name" class="form-control" />
-        <span asp-validation-for="User.Name" class="text-danger"></span>
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="User.Email" class="form-label">Email:</label>
-        <input asp-for="User.Email" class="form-control" />
-        <span asp-validation-for="User.Email" class="text-danger"></span>
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
     <div class="mb-3">

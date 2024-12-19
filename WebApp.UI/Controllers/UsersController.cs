@@ -10,10 +10,11 @@ namespace WebApp.UI.Controllers
     {
         public async Task<IActionResult> Index()
         {
-            var users = await context.Users.Include(u => u.Role).ToListAsync();
+            var users = await context.Users
+                .Include(u => u.Role)
+                .ToListAsync();
             return View(users);
         }
-
 
         public async Task<IActionResult> Create()
         {
@@ -28,7 +29,7 @@ namespace WebApp.UI.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken] 
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserCreateViewModel viewModel)
         {
             if (!ModelState.IsValid)
@@ -38,66 +39,66 @@ namespace WebApp.UI.Controllers
                 return View(viewModel);
             }
 
-            if (viewModel.SelectedRoleId.HasValue)
-            {
-                var selectedRole = await context.Roles.FindAsync(viewModel.SelectedRoleId.Value);
-                if (selectedRole == null)
-                {
-                    ModelState.AddModelError("SelectedRoleId", "Selected role does not exist.");
-                    viewModel.Roles = await context.Roles.ToListAsync();
-                    viewModel.AllTasks = await context.Tasks.ToListAsync();
-                    return View(viewModel);
-                }
-
-                var user = new User
-                {
-                    Name = viewModel.Name,
-                    Email = viewModel.Email,
-                    Role = selectedRole
-                };
-
-                if (viewModel.SelectedTasks.Length != 0)
-                {
-                    var selectedTasks = await context.Tasks
-                        .Where(t => viewModel.SelectedTasks.Contains(t.Id))
-                        .ToListAsync();
-                    user.Tasks = selectedTasks;
-                }
-
-                context.Users.Add(user);
-                await context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            else
+            if (!viewModel.SelectedRoleId.HasValue)
             {
                 ModelState.AddModelError("SelectedRoleId", "Role is required.");
                 viewModel.Roles = await context.Roles.ToListAsync();
                 viewModel.AllTasks = await context.Tasks.ToListAsync();
                 return View(viewModel);
             }
-        }
 
+            var selectedRole = await context.Roles.FindAsync(viewModel.SelectedRoleId.Value);
+            if (selectedRole == null)
+            {
+                ModelState.AddModelError("SelectedRoleId", "Selected role does not exist.");
+                viewModel.Roles = await context.Roles.ToListAsync();
+                viewModel.AllTasks = await context.Tasks.ToListAsync();
+                return View(viewModel);
+            }
+
+            var user = new User
+            {
+                Name = viewModel.Name,
+                Email = viewModel.Email,
+                Role = selectedRole
+            };
+
+            if (viewModel.SelectedTasks.Length != 0)
+            {
+                var selectedTasks = await context.Tasks
+                    .Where(t => viewModel.SelectedTasks.Contains(t.Id))
+                    .ToListAsync();
+                user.Tasks = selectedTasks;
+            }
+
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
 
         public async Task<IActionResult> Edit(int id)
         {
             var user = await context.Users
-                                     .Include(u => u.Role)
-                                     .Include(u => u.Tasks)
-                                     .FirstOrDefaultAsync(u => u.Id == id);
-            if (user == null)
-                return NotFound();
+                .Include(u => u.Role)
+                .Include(u => u.Tasks)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null) return NotFound();
 
             var roles = await context.Roles.ToListAsync();
             var tasks = await context.Tasks.ToListAsync();
 
             var viewModel = new UserEditViewModel
             {
-                User = user,
+                UserId = user.Id,
+                Name = user.Name,
+                Email = user.Email,
                 Roles = roles,
                 AllTasks = tasks,
-                SelectedRoleId = user.Role.Id,
+                SelectedRoleId = user.RoleId,
                 SelectedTasks = user.Tasks != null ? user.Tasks.Select(t => t.Id).ToArray() : []
             };
+
             return View(viewModel);
         }
 
@@ -113,27 +114,15 @@ namespace WebApp.UI.Controllers
             }
 
             var user = await context.Users
-                                     .Include(u => u.Tasks)
-                                     .FirstOrDefaultAsync(u => u.Id == viewModel.User.Id);
-            if (user == null)
-                return NotFound();
+                .Include(u => u.Tasks)
+                .FirstOrDefaultAsync(u => u.Id == viewModel.UserId);
 
-            user.Name = viewModel.User.Name;
-            user.Email = viewModel.User.Email;
+            if (user == null) return NotFound();
 
-            if (viewModel.SelectedRoleId.HasValue)
-            {
-                var selectedRole = await context.Roles.FindAsync(viewModel.SelectedRoleId.Value);
-                if (selectedRole == null)
-                {
-                    ModelState.AddModelError("SelectedRoleId", "Selected role does not exist.");
-                    viewModel.Roles = await context.Roles.ToListAsync();
-                    viewModel.AllTasks = await context.Tasks.ToListAsync();
-                    return View(viewModel);
-                }
-                user.Role = selectedRole;
-            }
-            else
+            user.Name = viewModel.Name;
+            user.Email = viewModel.Email;
+
+            if (!viewModel.SelectedRoleId.HasValue)
             {
                 ModelState.AddModelError("SelectedRoleId", "Role is required.");
                 viewModel.Roles = await context.Roles.ToListAsync();
@@ -141,19 +130,29 @@ namespace WebApp.UI.Controllers
                 return View(viewModel);
             }
 
-            user.Tasks = [];
+            var selectedRole = await context.Roles.FindAsync(viewModel.SelectedRoleId.Value);
+            if (selectedRole == null)
+            {
+                ModelState.AddModelError("SelectedRoleId", "Selected role does not exist.");
+                viewModel.Roles = await context.Roles.ToListAsync();
+                viewModel.AllTasks = await context.Tasks.ToListAsync();
+                return View(viewModel);
+            }
+
+            user.Role = selectedRole;
+
+            user.Tasks.Clear();
             if (viewModel.SelectedTasks.Length != 0)
             {
                 var selectedTasks = await context.Tasks
-                                                .Where(t => viewModel.SelectedTasks.Contains(t.Id))
-                                                .ToListAsync();
+                    .Where(t => viewModel.SelectedTasks.Contains(t.Id))
+                    .ToListAsync();
                 user.Tasks.AddRange(selectedTasks);
             }
 
             await context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
 
         public async Task<IActionResult> Delete(int id)
         {
