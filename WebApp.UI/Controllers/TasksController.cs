@@ -33,6 +33,14 @@ namespace WebApp.UI.Controllers
                 return View(task);
             }
 
+            var existingNames = await context.Tasks.Select(t => t.Name).ToListAsync();
+            var nameSet = new HashSet<string>(existingNames, StringComparer.OrdinalIgnoreCase);
+            if (nameSet.Contains(task.Name))
+            {
+                ModelState.AddModelError("Name", "Task with this name already exists.");
+                return View(task);
+            }
+
             context.Tasks.Add(task);
             await context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));

@@ -1,7 +1,18 @@
-﻿.icon-unselected {
-    color: #aaa !important;
+﻿.selectable-unselected {
+    background: #f0f0f0;
+    color: #333;
+    border-radius: 5px;
+    padding: 5px;
+    display: inline-block;
+    margin: 2px;
 }
 
-.icon-selected {
-    color: #28a745 !important;
+.selectable-selected {
+    background: #28a745;
+    color: #fff;
+    border-radius: 5px;
+    padding: 5px;
+    display: inline-block;
+    margin: 2px;
+    font-weight: bold;
 }

@@ -10,43 +10,45 @@
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="UserId" />
 
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
     <div class="mb-3">
-        <label asp-for="Name" class="form-label"></label>
-        <input asp-for="Name" class="form-control" />
+        <label asp-for="Name" class="form-label" aria-label="Name"></label>
+        <input asp-for="Name" class="form-control" aria-label="Name" />
         <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" />
+        <label asp-for="Email" class="form-label" aria-label="Email"></label>
+        <input asp-for="Email" class="form-control" aria-label="Email" />
         <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Role:</label>
-        <select asp-for="SelectedRoleId" class="form-select">
+        <label asp-for="SelectedRoleId" class="form-label" aria-label="Role"></label>
+        <select asp-for="SelectedRoleId" class="form-select" aria-label="Role">
             <option value="">-- Select a Role --</option>
             @foreach (var role in Model.Roles)
             {
-                <option value="@role.Id" selected="@(Model.SelectedRoleId == role.Id ? "selected" : null)">@role.Name</option>
+                <option value="@role.Id" selected="@(Model.SelectedRoleId == role.Id)">@role.Name</option>
             }
         </select>
         <span asp-validation-for="SelectedRoleId" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Tasks:</label><br />
+        <label class="form-label" aria-label="Tasks">Tasks:</label><br />
         <div class="d-flex flex-wrap" style="gap:10px;">
             @foreach (var task in Model.AllTasks)
             {
                 bool isSelected = Model.SelectedTasks.Contains(task.Id);
-                <span class="task-icon" data-id="@task.Id" style="cursor:pointer;">
-                    <i class="fas fa-tag @(isSelected ? "icon-selected" : "icon-unselected")"></i> @task.Name
+                <span class="selectable-item @(isSelected ? "selectable-selected" : "selectable-unselected")" data-id="@task.Id" style="cursor:pointer;" aria-label="@task.Name">
+                    @task.Name
+                    @if (isSelected)
+                    {
+                        <input type="hidden" name="SelectedTasks" value="@task.Id" />
+                    }
                 </span>
-                @if (isSelected)
-                {
-                    <input type="hidden" name="SelectedTasks" value="@task.Id" />
-                }
             }
         </div>
     </div>
@@ -60,26 +62,40 @@
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial");
     <script>
-        document.querySelectorAll('.task-icon').forEach(icon => {
-            icon.addEventListener('click', () => {
-                const taskId = icon.getAttribute('data-id');
-                const hiddenInputs = document.querySelectorAll(`input[name="SelectedTasks"][value="${taskId}"]`);
-                const iElement = icon.querySelector('i');
+        document.querySelectorAll('.selectable-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const taskId = item.getAttribute('data-id');
+                const hiddenInput = item.querySelector(`input[name="SelectedTasks"][value="${taskId}"]`);
 
-                if (hiddenInputs.length > 0) {
-                    hiddenInputs.forEach(i => i.remove());
-                    iElement.classList.remove('icon-selected');
-                    iElement.classList.add('icon-unselected');
+                if (hiddenInput) {
+                    hiddenInput.remove();
+                    item.classList.remove('selectable-selected');
+                    item.classList.add('selectable-unselected');
                 } else {
                     const hidden = document.createElement('input');
                     hidden.type = 'hidden';
                     hidden.name = 'SelectedTasks';
                     hidden.value = taskId;
-                    icon.appendChild(hidden);
-                    iElement.classList.remove('icon-unselected');
-                    iElement.classList.add('icon-selected');
+                    item.appendChild(hidden);
+                    item.classList.remove('selectable-unselected');
+                    item.classList.add('selectable-selected');
                 }
             });
         });
     </script>
+    <style>
+        .selectable-selected {
+            background-color: #d1e7dd;
+            border: 1px solid #0f5132;
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        .selectable-unselected {
+            background-color: #f8d7da;
+            border: 1px solid #842029;
+            border-radius: 5px;
+            padding: 5px;
+        }
+    </style>
 }

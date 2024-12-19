@@ -1,0 +1,14 @@
+﻿@{
+    ViewData["Title"] = "Advanced Features Demo";
+    var results = ViewBag.Results as List<string>;
+}
+<h1>Advanced Features Demo</h1>
+@if (results != null)
+{
+    <ul>
+        @foreach (var r in results)
+        {
+            <li>@r</li>
+        }
+    </ul>
+}

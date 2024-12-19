@@ -1,4 +1,5 @@
 ﻿@model WebApp.DAL.Entities.Task
+
 @{
     ViewData["Title"] = "Edit Task";
 }
@@ -25,13 +26,13 @@
             @foreach (var u in (ViewBag.AllUsers as List<WebApp.DAL.Entities.User>)!)
             {
                 bool isSelected = Model.Users.Any(tu => tu.Id == u.Id);
-                <span class="user-icon" data-id="@u.Id" style="cursor:pointer;">
-                    <i class="fas fa-user @(isSelected ? "icon-selected" : "icon-unselected")"></i> @u.Name
+                <span class="selectable-item @(isSelected ? "selectable-selected" : "selectable-unselected")" data-id="@u.Id" style="cursor:pointer;">
+                    @u.Name
+                    @if (isSelected)
+                    {
+                        <input type="hidden" name="SelectedUsers" value="@u.Id" />
+                    }
                 </span>
-                @if (isSelected)
-                {
-                    <input type="hidden" name="SelectedUsers" value="@u.Id" />
-                }
             }
         </div>
     </div>
@@ -44,26 +45,40 @@
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial");
     <script>
-        document.querySelectorAll('.user-icon').forEach(icon => {
-            icon.addEventListener('click', () => {
-                const userId = icon.getAttribute('data-id');
+        document.querySelectorAll('.selectable-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const userId = item.getAttribute('data-id');
                 const hiddenInputs = document.querySelectorAll(`input[name="SelectedUsers"][value="${userId}"]`);
-                const iElement = icon.querySelector('i');
 
                 if (hiddenInputs.length > 0) {
                     hiddenInputs.forEach(i => i.remove());
-                    iElement.classList.remove('icon-selected');
-                    iElement.classList.add('icon-unselected');
+                    item.classList.remove('selectable-selected');
+                    item.classList.add('selectable-unselected');
                 } else {
                     const hidden = document.createElement('input');
                     hidden.type = 'hidden';
                     hidden.name = 'SelectedUsers';
                     hidden.value = userId;
-                    icon.appendChild(hidden);
-                    iElement.classList.remove('icon-unselected');
-                    iElement.classList.add('icon-selected');
+                    item.appendChild(hidden);
+                    item.classList.remove('selectable-unselected');
+                    item.classList.add('selectable-selected');
                 }
             });
         });
     </script>
+    <style>
+        .selectable-selected {
+            background-color: #d1e7dd;
+            border: 1px solid #0f5132;
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        .selectable-unselected {
+            background-color: #f8d7da;
+            border: 1px solid #842029;
+            border-radius: 5px;
+            padding: 5px;
+        }
+    </style>
 }
