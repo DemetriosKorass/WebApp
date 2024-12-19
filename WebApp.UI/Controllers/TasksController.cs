@@ -1,12 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Threading.Tasks;
 using WebApp.DAL;
+using WebApp.UI.Services.ExtensionMethods;
 using WebApp.UI.ViewModels;
 using Task = WebApp.DAL.Entities.Task;
 
 namespace WebApp.UI.Controllers
 {
-    public class TasksController(AppDbContext context) : Controller
+    public class TasksController(AppDbContext context, IServiceProvider serviceProvider) : Controller
     {
         public async Task<IActionResult> Index()
         {
@@ -95,10 +98,32 @@ namespace WebApp.UI.Controllers
             var newTasks = uniqueTaskNames.Select(name => new Task { Name = name }).ToList();
 
             // Add new tasks to the context
-            context.Tasks.AddRange(newTasks);
-            await context.SaveChangesAsync(cancellationToken);
+            var parallelCount = Environment.ProcessorCount;
+            var parallelOptions = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = parallelCount,
+                CancellationToken = cancellationToken
+            };
+            try
+            {
+                int batchSize = newTasks.Count / parallelCount + 1;
+                Parallel.ForEach(newTasks.Split(batchSize), parallelOptions, async task =>
+                {
+                    using var scope = serviceProvider.CreateScope();
 
-            ViewBag.Message = $"{newTasks.Count} tasks were successfully created.";
+                    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    dbContext.Tasks.AddRange(task);
+
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                });
+                ViewBag.Message = $"{newTasks.Count} tasks were successfully created.";
+            }
+            catch (OperationCanceledException)
+            {
+                ModelState.AddModelError("", "Task creation was cancelled.");
+                return View();
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
