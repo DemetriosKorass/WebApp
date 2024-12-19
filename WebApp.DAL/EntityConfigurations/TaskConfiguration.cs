@@ -13,8 +13,6 @@ namespace WebApp.DAL.EntityConfigurations
             builder.Property(t => t.Name)
                 .HasMaxLength(150)
                 .IsRequired();
-            builder.HasMany(t => t.Users)
-                .WithMany(u => u.Tasks);
         }
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebApp.DAL;
 
@@ -10,9 +11,11 @@ using WebApp.DAL;
 namespace WebApp.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241219002835_MigrationUserConstraintFix")]
+    partial class MigrationUserConstraintFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,19 +24,19 @@ namespace WebApp.DAL.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("UserTask", b =>
+            modelBuilder.Entity("TaskUser", b =>
                 {
-                    b.Property<int>("UserId")
+                    b.Property<int>("TasksId")
                         .HasColumnType("int");
 
-                    b.Property<int>("TaskId")
+                    b.Property<int>("UsersId")
                         .HasColumnType("int");
 
-                    b.HasKey("UserId", "TaskId");
+                    b.HasKey("TasksId", "UsersId");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("UsersId");
 
-                    b.ToTable("UserTasks", (string)null);
+                    b.ToTable("TaskUser");
                 });
 
             modelBuilder.Entity("WebApp.DAL.Entities.Role", b =>
@@ -55,20 +58,6 @@ namespace WebApp.DAL.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Default User",
-                            Permissions = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Admin",
-                            Permissions = 7
-                        });
                 });
 
             modelBuilder.Entity("WebApp.DAL.Entities.Task", b =>
@@ -87,23 +76,6 @@ namespace WebApp.DAL.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Tasks", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Work"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Eat"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "Sleep"
-                        });
                 });
 
             modelBuilder.Entity("WebApp.DAL.Entities.User", b =>
@@ -129,22 +101,25 @@ namespace WebApp.DAL.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.HasIndex("RoleId");
 
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("UserTask", b =>
+            modelBuilder.Entity("TaskUser", b =>
                 {
                     b.HasOne("WebApp.DAL.Entities.Task", null)
                         .WithMany()
-                        .HasForeignKey("TaskId")
+                        .HasForeignKey("TasksId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("WebApp.DAL.Entities.User", null)
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("UsersId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -5,15 +5,8 @@ using WebApp.DAL.Entities;
 
 namespace WebApp.UI.Controllers
 {
-    public class RolesController : Controller
+    public class RolesController(AppDbContext context) : Controller
     {
-        private readonly AppDbContext context;
-
-        public RolesController(AppDbContext context)
-        {
-            this.context = context;
-        }
-
         public async Task<IActionResult> Index()
         {
             var roles = await context.Roles.ToListAsync();

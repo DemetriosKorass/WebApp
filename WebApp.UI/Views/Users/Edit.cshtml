@@ -1,4 +1,5 @@
-﻿@model WebApp.DAL.Entities.User
+﻿@model WebApp.UI.ViewModels.UserEditViewModel
+
 @{
     ViewData["Title"] = "Edit User";
 }
@@ -6,17 +7,58 @@
 <h1 class="my-4">Edit User</h1>
 
 <form asp-action="Edit" method="post" class="card p-3" style="max-width: 800px;">
-    <input type="hidden" name="Id" value="@Model.Id" />
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="User.Id" />
+
     <div class="mb-3">
-        <label for="Name" class="form-label">Name:</label>
-        <input type="text" id="Name" name="Name" class="form-control" value="@Model.Name" />
+        <label asp-for="User.Name" class="form-label">Name:</label>
+        <input asp-for="User.Name" class="form-control" />
+        <span asp-validation-for="User.Name" class="text-danger"></span>
     </div>
+
     <div class="mb-3">
-        <label for="Email" class="form-label">Email:</label>
-        <input type="email" id="Email" name="Email" class="form-control" value="@Model.Email" />
+        <label asp-for="User.Email" class="form-label">Email:</label>
+        <input asp-for="User.Email" class="form-control" />
+        <span asp-validation-for="User.Email" class="text-danger"></span>
     </div>
+
+    <div class="mb-3">
+        <label class="form-label">Role:</label>
+        <select asp-for="SelectedRoleId" class="form-select">
+            <option value="">-- Select a Role --</option>
+            @foreach (var role in Model.Roles)
+            {
+                if (Model.SelectedRoleId == role.Id)
+                {
+                    <option value="@role.Id" selected>@role.Name</option>
+                }
+                else
+                {
+                    <option value="@role.Id">@role.Name</option>
+                }
+            }
+        </select>
+        <span asp-validation-for="SelectedRoleId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tasks:</label><br />
+        @foreach (var task in Model.AllTasks)
+        {
+            bool isChecked = Model.SelectedTasks.Contains(task.Id);
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" name="SelectedTasks" value="@task.Id" @(isChecked ? "checked" : "") />
+                <label class="form-check-label">@task.Name</label>
+            </div>
+        }
+    </div>
+
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-success btn-sm">Save</button>
-        <a href="/Users" class="btn btn-secondary btn-sm">Cancel</a>
+        <a href="@Url.Action("Index")" class="btn btn-secondary btn-sm">Cancel</a>
     </div>
 </form>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial");
+}

@@ -5,15 +5,8 @@ using Task = WebApp.DAL.Entities.Task;
 
 namespace WebApp.UI.Controllers
 {
-    public class TasksController : Controller
+    public class TasksController(AppDbContext context) : Controller
     {
-        private readonly AppDbContext context;
-
-        public TasksController(AppDbContext context)
-        {
-            this.context = context;
-        }
-
         public async Task<IActionResult> Index()
         {
             var tasks = await context.Tasks.ToListAsync();
@@ -39,18 +32,30 @@ namespace WebApp.UI.Controllers
         {
             var task = await context.Tasks.FindAsync(id);
             if (task == null) return NotFound();
+
+            ViewBag.AllUsers = await context.Users.ToListAsync();
             return View(task);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Task updatedTask)
+        public async Task<IActionResult> Edit(Task updatedTask, [FromForm] int[] SelectedUsers)
         {
-            if (!ModelState.IsValid) return View(updatedTask);
+            var task = await context.Tasks
+                .Include(t => t.Users)
+                .FirstOrDefaultAsync(t => t.Id == updatedTask.Id);
+            if (task == null) return NotFound();
 
-            context.Tasks.Update(updatedTask);
+            task.Name = updatedTask.Name;
+
+            // Update Users
+            task.Users.Clear();
+            var users = await context.Users.Where(u => SelectedUsers.Contains(u.Id)).ToListAsync();
+            task.Users.AddRange(users);
+
             await context.SaveChangesAsync();
             return RedirectToAction("Index");
         }
+
 
         public async Task<IActionResult> Delete(int id)
         {
