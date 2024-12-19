@@ -15,6 +15,7 @@
             <th>Name</th>
             <th>Email</th>
             <th>Role</th>
+            <th>Tasks</th>
             <th style="width:150px;"></th>
         </tr>
     </thead>
@@ -24,7 +25,22 @@
             <tr>
                 <td>@user.Name</td>
                 <td>@user.Email</td>
-                <td>@user.Role.Name</td>
+                <td>@user.Role?.Name</td>
+                <td>
+                    @if (user.Tasks.Any())
+                    {
+                        <div class="d-flex flex-wrap" style="gap:5px;">
+                            @foreach (var task in user.Tasks)
+                            {
+                                <span class="badge bg-info text-dark">@task.Name</span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-muted">No tasks</span>
+                    }
+                </td>
                 <td>
                     <a class="btn btn-warning btn-sm" href="@Url.Action("Edit", new { id = user.Id })">Edit</a>
                     <a class="btn btn-danger btn-sm" href="@Url.Action("Delete", new { id = user.Id })">X</a>

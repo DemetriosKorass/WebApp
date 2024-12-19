@@ -15,47 +15,75 @@ namespace WebApp.UI.Controllers
 
         public IActionResult Create()
         {
-            return View();
+            return View(new Task());
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Task task)
         {
-            if (!ModelState.IsValid) return View(task);
+            if (string.IsNullOrWhiteSpace(task.Name))
+            {
+                ModelState.AddModelError("Name", "Task name is required.");
+            }
+            if (!ModelState.IsValid)
+            {
+                return View(task);
+            }
 
             context.Tasks.Add(task);
             await context.SaveChangesAsync();
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Edit(int id)
         {
-            var task = await context.Tasks.FindAsync(id);
+            var task = await context.Tasks
+                .Include(t => t.Users)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
             if (task == null) return NotFound();
 
             ViewBag.AllUsers = await context.Users.ToListAsync();
+
             return View(task);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Task updatedTask, [FromForm] int[] SelectedUsers)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, string Name, int[] SelectedUsers)
         {
             var task = await context.Tasks
                 .Include(t => t.Users)
-                .FirstOrDefaultAsync(t => t.Id == updatedTask.Id);
+                .FirstOrDefaultAsync(t => t.Id == id);
+
             if (task == null) return NotFound();
 
-            task.Name = updatedTask.Name;
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                ModelState.AddModelError("Name", "Task name is required.");
+            }
 
-            // Update Users
+            if (!ModelState.IsValid)
+            {
+                ViewBag.AllUsers = await context.Users.ToListAsync();
+                task.Name = Name ?? string.Empty;
+                return View(task);
+            }
+
+            task.Name = Name;
             task.Users.Clear();
-            var users = await context.Users.Where(u => SelectedUsers.Contains(u.Id)).ToListAsync();
-            task.Users.AddRange(users);
+            if (SelectedUsers.Length != 0)
+            {
+                var users = await context.Users
+                    .Where(u => SelectedUsers.Contains(u.Id))
+                    .ToListAsync();
+                task.Users.AddRange(users);
+            }
 
             await context.SaveChangesAsync();
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
-
 
         public async Task<IActionResult> Delete(int id)
         {
@@ -65,13 +93,15 @@ namespace WebApp.UI.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var task = await context.Tasks.FindAsync(id);
             if (task == null) return NotFound();
+
             context.Tasks.Remove(task);
             await context.SaveChangesAsync();
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
     }
 }

@@ -12,6 +12,7 @@ namespace WebApp.UI.Controllers
         {
             var users = await context.Users
                 .Include(u => u.Role)
+                .Include(u => u.Tasks)
                 .ToListAsync();
             return View(users);
         }
