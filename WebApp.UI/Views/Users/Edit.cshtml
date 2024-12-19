@@ -28,14 +28,7 @@
             <option value="">-- Select a Role --</option>
             @foreach (var role in Model.Roles)
             {
-                if (Model.SelectedRoleId == role.Id)
-                {
-                    <option value="@role.Id" selected>@role.Name</option>
-                }
-                else
-                {
-                    <option value="@role.Id">@role.Name</option>
-                }
+                <option value="@role.Id" selected="@(Model.SelectedRoleId == role.Id ? "selected" : null)">@role.Name</option>
             }
         </select>
         <span asp-validation-for="SelectedRoleId" class="text-danger"></span>
@@ -43,14 +36,19 @@
 
     <div class="mb-3">
         <label class="form-label">Tasks:</label><br />
-        @foreach (var task in Model.AllTasks)
-        {
-            bool isChecked = Model.SelectedTasks.Contains(task.Id);
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" name="SelectedTasks" value="@task.Id" @(isChecked ? "checked" : "") />
-                <label class="form-check-label">@task.Name</label>
-            </div>
-        }
+        <div class="d-flex flex-wrap" style="gap:10px;">
+            @foreach (var task in Model.AllTasks)
+            {
+                bool isSelected = Model.SelectedTasks.Contains(task.Id);
+                <span class="task-icon" data-id="@task.Id" style="cursor:pointer;">
+                    <i class="fas fa-tag @(isSelected ? "icon-selected" : "icon-unselected")"></i> @task.Name
+                </span>
+                @if (isSelected)
+                {
+                    <input type="hidden" name="SelectedTasks" value="@task.Id" />
+                }
+            }
+        </div>
     </div>
 
     <div class="d-flex gap-2">
@@ -61,4 +59,27 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial");
+    <script>
+        document.querySelectorAll('.task-icon').forEach(icon => {
+            icon.addEventListener('click', () => {
+                const taskId = icon.getAttribute('data-id');
+                const hiddenInputs = document.querySelectorAll(`input[name="SelectedTasks"][value="${taskId}"]`);
+                const iElement = icon.querySelector('i');
+
+                if (hiddenInputs.length > 0) {
+                    hiddenInputs.forEach(i => i.remove());
+                    iElement.classList.remove('icon-selected');
+                    iElement.classList.add('icon-unselected');
+                } else {
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'SelectedTasks';
+                    hidden.value = taskId;
+                    icon.appendChild(hidden);
+                    iElement.classList.remove('icon-unselected');
+                    iElement.classList.add('icon-selected');
+                }
+            });
+        });
+    </script>
 }

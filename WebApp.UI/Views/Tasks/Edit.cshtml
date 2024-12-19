@@ -6,24 +6,64 @@
 <h1 class="my-4">Edit Task</h1>
 
 <form asp-action="Edit" method="post" class="card p-3" style="max-width: 800px;">
+    @Html.AntiForgeryToken()
     <input type="hidden" name="Id" value="@Model.Id" />
     <div class="mb-3">
-        <label for="Name" class="form-label">Task Name:</label>
+        <label class="form-label">Task Name:</label>
         <input type="text" id="Name" name="Name" class="form-control" value="@Model.Name" />
+        @if (!ViewContext.ViewData.ModelState.IsValid && ViewContext.ViewData.ModelState.ContainsKey("Name"))
+        {
+            foreach (var error in ViewContext.ViewData.ModelState["Name"]!.Errors)
+            {
+                <span class="text-danger">@error.ErrorMessage</span>
+            }
+        }
     </div>
     <div class="mb-3">
         <label class="form-label">Users:</label><br />
-        @foreach (var u in ViewBag.AllUsers as List<WebApp.DAL.Entities.User>)
-        {
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" name="SelectedUsers" value="@u.Id"
-                @(Model.Users.Any(tu => tu.Id == u.Id) ? "checked" : "") />
-                <label class="form-check-label">@u.Name</label>
-            </div>
-        }
+        <div class="d-flex flex-wrap" style="gap:10px;">
+            @foreach (var u in (ViewBag.AllUsers as List<WebApp.DAL.Entities.User>)!)
+            {
+                bool isSelected = Model.Users.Any(tu => tu.Id == u.Id);
+                <span class="user-icon" data-id="@u.Id" style="cursor:pointer;">
+                    <i class="fas fa-user @(isSelected ? "icon-selected" : "icon-unselected")"></i> @u.Name
+                </span>
+                @if (isSelected)
+                {
+                    <input type="hidden" name="SelectedUsers" value="@u.Id" />
+                }
+            }
+        </div>
     </div>
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-success btn-sm">Save</button>
         <a href="/Tasks" class="btn btn-secondary btn-sm">Cancel</a>
     </div>
 </form>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial");
+    <script>
+        document.querySelectorAll('.user-icon').forEach(icon => {
+            icon.addEventListener('click', () => {
+                const userId = icon.getAttribute('data-id');
+                const hiddenInputs = document.querySelectorAll(`input[name="SelectedUsers"][value="${userId}"]`);
+                const iElement = icon.querySelector('i');
+
+                if (hiddenInputs.length > 0) {
+                    hiddenInputs.forEach(i => i.remove());
+                    iElement.classList.remove('icon-selected');
+                    iElement.classList.add('icon-unselected');
+                } else {
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'SelectedUsers';
+                    hidden.value = userId;
+                    icon.appendChild(hidden);
+                    iElement.classList.remove('icon-unselected');
+                    iElement.classList.add('icon-selected');
+                }
+            });
+        });
+    </script>
+}

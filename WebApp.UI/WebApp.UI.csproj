@@ -20,4 +20,8 @@
     <ProjectReference Include="..\WebApp.DAL\WebApp.DAL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\css\StyleSheet.css" />
+  </ItemGroup>
+
 </Project>

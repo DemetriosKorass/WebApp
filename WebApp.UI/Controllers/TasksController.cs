@@ -9,7 +9,9 @@ namespace WebApp.UI.Controllers
     {
         public async Task<IActionResult> Index()
         {
-            var tasks = await context.Tasks.ToListAsync();
+            var tasks = await context.Tasks
+                .Include(t => t.Users)
+                .ToListAsync();
             return View(tasks);
         }
 

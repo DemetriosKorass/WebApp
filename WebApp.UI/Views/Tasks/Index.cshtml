@@ -12,6 +12,7 @@
     <thead class="table-dark">
         <tr>
             <th>Name</th>
+            <th>Assigned Users</th>
             <th style="width:100px;"></th>
         </tr>
     </thead>
@@ -20,6 +21,19 @@
         {
             <tr>
                 <td>@task.Name</td>
+                <td>
+                    @if (task.Users.Any())
+                    {
+                        foreach (var u in task.Users)
+                        {
+                            <span class="badge bg-info text-dark">@u.Name</span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="text-muted">No users</span>
+                    }
+                </td>
                 <td>
                     <a class="btn btn-warning btn-sm" href="/Tasks/Edit/@task.Id">Edit</a>
                     <a class="btn btn-danger btn-sm" href="/Tasks/Delete/@task.Id">X</a>
