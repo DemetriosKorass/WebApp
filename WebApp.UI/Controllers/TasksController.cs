@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using System.Threading.Tasks;
+using Swashbuckle.AspNetCore.Annotations;
 using WebApp.DAL;
 using WebApp.UI.Services.ExtensionMethods;
 using WebApp.UI.ViewModels;
@@ -10,9 +9,19 @@ using Task = WebApp.DAL.Entities.Task;
 
 namespace WebApp.UI.Controllers
 {
+    /// <summary>
+    /// Manages operations related to tasks, including listing, creation, bulk creation, user assignments, editing, and deletion.
+    /// </summary>
     [Authorize]
     public class TasksController(AppDbContext context, IServiceProvider serviceProvider) : Controller
     {
+
+        /// <summary>
+        /// Displays a list of all tasks, including their associated users.
+        /// </summary>
+        /// <returns>A view containing the list of tasks.</returns>
+        [HttpGet("[Controller]")]
+        [SwaggerOperation(Summary = "List Tasks", Description = "Displays a list of all tasks with their associated users.")]
         public async Task<IActionResult> Index()
         {
             var tasks = await context.Tasks
@@ -21,13 +30,25 @@ namespace WebApp.UI.Controllers
             return View(tasks);
         }
 
+        /// <summary>
+        /// Displays the form to create a new task.
+        /// </summary>
+        /// <returns>A view containing the task creation form.</returns>
+        [HttpGet("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "Create Task Form", Description = "Displays the form for creating a new task.")]
         public IActionResult Create()
         {
             return View(new Task());
         }
 
-        [HttpPost]
+        /// <summary>
+        /// Processes the creation of a new task. Validates the task name and ensures uniqueness before saving.
+        /// </summary>
+        /// <param name="task">The task entity to be created.</param>
+        /// <returns>Redirects to the Index view upon successful creation or redisplays the form with errors.</returns>
+        [HttpPost("[Controller]/[Action]")]
         [ValidateAntiForgeryToken]
+        [SwaggerOperation(Summary = "Create Task", Description = "Processes the creation of a new task.")]
         public async Task<IActionResult> Create(Task task)
         {
             if (string.IsNullOrWhiteSpace(task.Name))
@@ -51,13 +72,27 @@ namespace WebApp.UI.Controllers
             await context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+        /// <summary>
+        /// Displays the form to bulk create tasks by entering multiple task names.
+        /// </summary>
+        /// <returns>A view containing the bulk task creation form.</returns>
+        [HttpGet("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "Bulk Create Task Form", Description = "Displays the form for bulk creating tasks.")]
         public IActionResult BulkCreate()
         {
             return View();
         }
 
-        [HttpPost]
+        /// <summary>
+        /// Processes the bulk creation of tasks. Splits input task names, validates uniqueness, and creates tasks in parallel.
+        /// </summary>
+        /// <param name="taskNames">A newline-separated string of task names to be created.</param>
+        /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+        /// <returns>Redirects to the Index view upon successful creation or redisplays the form with errors.</returns>
+        [HttpPost("[Controller]/[Action]")]
         [ValidateAntiForgeryToken]
+        [SwaggerOperation(Summary = "Bulk Create Tasks", Description = "Processes the bulk creation of tasks.")]
         public async Task<IActionResult> BulkCreate(string taskNames, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(taskNames))
@@ -66,7 +101,6 @@ namespace WebApp.UI.Controllers
                 return View();
             }
 
-            // Split the input string into lines, removing empty entries and trimming whitespace
             var taskNameList = taskNames
                 .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
                 .Select(name => name.Trim())
@@ -81,13 +115,11 @@ namespace WebApp.UI.Controllers
 
             var uniqueTaskNames = new HashSet<string>(taskNameList, StringComparer.OrdinalIgnoreCase);
 
-            // Asynchronously fetch existing task names
             var existingNames = await context.Tasks
                 .Select(t => t.Name)
                 .ToListAsync(cancellationToken);
             var existingNameSet = new HashSet<string>(existingNames, StringComparer.OrdinalIgnoreCase);
 
-            // Remove task names that already exist
             uniqueTaskNames.RemoveWhere(name => existingNameSet.Contains(name));
 
             if (uniqueTaskNames.Count == 0)
@@ -96,10 +128,8 @@ namespace WebApp.UI.Controllers
                 return View();
             }
 
-            // Prepare new Task entities
             var newTasks = uniqueTaskNames.Select(name => new Task { Name = name }).ToList();
 
-            // Add new tasks to the context
             var parallelCount = Environment.ProcessorCount;
             var parallelOptions = new ParallelOptions
             {
@@ -129,6 +159,12 @@ namespace WebApp.UI.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        /// <summary>
+        /// Displays the form to assign users to tasks in bulk.
+        /// </summary>
+        /// <returns>A view containing the bulk user assignment form.</returns>
+        [HttpGet("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "Bulk Assign Users to Tasks", Description = "Displays the form for bulk assigning users to tasks.")]
         public async Task<IActionResult> AssignUsersBulk()
         {
             var tasks = await context.Tasks.Include(t => t.Users).ToListAsync();
@@ -146,9 +182,15 @@ namespace WebApp.UI.Controllers
             return View(viewModel);
         }
 
-
-        [HttpPost]
+        /// <summary>
+        /// Processes the bulk assignment of users to tasks based on the provided view model.
+        /// </summary>
+        /// <param name="viewModel">The view model containing task assignments.</param>
+        /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+        /// <returns>Redirects to the Index view upon successful assignment or redisplays the form with errors.</returns>
+        [HttpPost("[Controller]/[Action]")]
         [ValidateAntiForgeryToken]
+        [SwaggerOperation(Summary = "Bulk Assign Users to Tasks", Description = "Processes the bulk assignment of users to tasks.")]
         public async Task<IActionResult> AssignUsersBulk(AssignUsersBulkViewModel viewModel, CancellationToken cancellationToken)
         {
             if (viewModel.TaskAssignments == null || viewModel.TaskAssignments.Count == 0)
@@ -165,7 +207,7 @@ namespace WebApp.UI.Controllers
                     .Include(t => t.Users)
                     .FirstOrDefaultAsync(t => t.Id == assignment.TaskId, cancellationToken);
 
-                if (task == null) continue; 
+                if (task == null) continue;
 
                 var selectedUsers = await context.Users
                     .Where(u => assignment.SelectedUserIds.Contains(u.Id))
@@ -191,6 +233,13 @@ namespace WebApp.UI.Controllers
             return View(viewModel);
         }
 
+        /// <summary>
+        /// Displays the form to edit an existing task.
+        /// </summary>
+        /// <param name="id">The identifier of the task to edit.</param>
+        /// <returns>A view containing the task edit form or a NotFound result if the task does not exist.</returns>
+        [HttpGet("[Controller]/[Action]/{id}")]
+        [SwaggerOperation(Summary = "Edit Task Form", Description = "Displays the form for editing an existing task.")]
         public async Task<IActionResult> Edit(int id)
         {
             var task = await context.Tasks
@@ -204,8 +253,16 @@ namespace WebApp.UI.Controllers
             return View(task);
         }
 
-        [HttpPost]
+        /// <summary>
+        /// Processes the editing of an existing task, updating its name and assigned users.
+        /// </summary>
+        /// <param name="id">The identifier of the task being edited.</param>
+        /// <param name="Name">The new name for the task.</param>
+        /// <param name="SelectedUsers">An array of user identifiers to assign to the task.</param>
+        /// <returns>Redirects to the Index view upon successful editing or redisplays the form with errors.</returns>
+        [HttpPost("[Controller]/[Action]/{id}")]
         [ValidateAntiForgeryToken]
+        [SwaggerOperation(Summary = "Edit Task", Description = "Processes the editing of an existing task.")]
         public async Task<IActionResult> Edit(int id, string Name, int[] SelectedUsers)
         {
             var task = await context.Tasks
@@ -240,6 +297,13 @@ namespace WebApp.UI.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        /// <summary>
+        /// Displays the confirmation page to delete a specific task.
+        /// </summary>
+        /// <param name="id">The identifier of the task to delete.</param>
+        /// <returns>A view containing the delete confirmation or a NotFound result if the task does not exist.</returns>
+        [HttpGet("[Controller]/[Action]/{id}")]
+        [SwaggerOperation(Summary = "Delete Task Confirmation", Description = "Displays the confirmation page for deleting a task.")]
         public async Task<IActionResult> Delete(int id)
         {
             var task = await context.Tasks.FindAsync(id);
@@ -247,8 +311,14 @@ namespace WebApp.UI.Controllers
             return View(task);
         }
 
-        [HttpPost, ActionName("Delete")]
+        /// <summary>
+        /// Processes the deletion of a specific task after confirmation.
+        /// </summary>
+        /// <param name="id">The identifier of the task to delete.</param>
+        /// <returns>Redirects to the Index view upon successful deletion or a NotFound result if the task does not exist.</returns>
+        [HttpPost("[Controller]/[Action]/{id}"), ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [SwaggerOperation(Summary = "Delete Task", Description = "Processes the deletion of a specific task.")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var task = await context.Tasks.FindAsync(id);
