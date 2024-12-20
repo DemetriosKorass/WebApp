@@ -5,6 +5,9 @@ using Microsoft.OpenApi.Models;
 using NodaTime;
 using Hangfire;
 using Hangfire.MemoryStorage;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using WebApp.UI.Filters;
+using WebApp.UI.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +15,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DatabaseConnection")));
 
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // Add the custom action filter globally
+    options.Filters.Add<ActionLoggingFilter>();
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton<IClock>(SystemClock.Instance);
 builder.Services.AddSingleton<DateTimeService>();
@@ -36,10 +43,24 @@ builder.Services.AddSwaggerGen(options =>
         options.IncludeXmlComments(xmlPath);
     }
 });
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+    });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-app.UseMiddleware<WebApp.UI.Middlewares.ExceptionHandlingMiddleware>();
+
+
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseMiddleware<AdminPathMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI(options => 

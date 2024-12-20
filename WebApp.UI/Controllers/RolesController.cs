@@ -5,9 +5,11 @@ using WebApp.DAL.Entities;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApp.UI.Controllers
 {
+    [Authorize]
     /// <summary>
     /// Controller for managing roles, including creation, editing, and deletion.
     /// </summary>

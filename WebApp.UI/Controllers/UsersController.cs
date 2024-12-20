@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApp.DAL;
 using WebApp.DAL.Entities;
@@ -6,6 +7,7 @@ using WebApp.UI.ViewModels;
 
 namespace WebApp.UI.Controllers
 {
+    [Authorize]
     public class UsersController(AppDbContext context) : Controller
     {
         public async Task<IActionResult> Index()
