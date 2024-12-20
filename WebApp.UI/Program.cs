@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using WebApp.DAL;
 using WebApp.UI.Services;
 using Microsoft.OpenApi.Models;
+using NodaTime;
+using Hangfire;
+using Hangfire.MemoryStorage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +14,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSingleton<IClock>(SystemClock.Instance);
+builder.Services.AddSingleton<DateTimeService>();
+builder.Services.AddSingleton<MathService>();
+
+builder.Services.AddHangfire(x => x.UseMemoryStorage());
+builder.Services.AddHangfireServer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -28,20 +37,19 @@ builder.Services.AddSwaggerGen(options =>
     }
 });
 
-builder.Services.AddSingleton<MathService>();
-
 var app = builder.Build();
 
 app.UseMiddleware<WebApp.UI.Middlewares.ExceptionHandlingMiddleware>();
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Users}/{action=Index}/{id?}");
 
 app.UseSwagger();
 app.UseSwaggerUI(options => 
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-    options.RoutePrefix = string.Empty;
+    options.RoutePrefix = "swagger";
 });
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Users}/{action=Index}/{id?}");
+app.UseHangfireDashboard();
 
 app.Run();

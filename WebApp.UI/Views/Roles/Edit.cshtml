@@ -15,17 +15,17 @@
     <div class="mb-3">
         <label class="form-label">Permissions:</label><br />
         <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" name="Permissions" value="Read"
+            <input class="form-check-input" type="checkbox" name="updatedPermissions" value="Read"
             @(Model.Permissions.HasFlag(Permissions.Read) ? "checked" : "") />
             <label class="form-check-label">Read</label>
         </div>
         <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" name="Permissions" value="Write"
+            <input class="form-check-input" type="checkbox" name="updatedPermissions" value="Write"
             @(Model.Permissions.HasFlag(Permissions.Write) ? "checked" : "") />
             <label class="form-check-label">Write</label>
         </div>
         <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" name="Permissions" value="Delete"
+            <input class="form-check-input" type="checkbox" name="updatedPermissions" value="Delete"
             @(Model.Permissions.HasFlag(Permissions.Delete) ? "checked" : "") />
             <label class="form-check-label">Delete</label>
         </div>

@@ -8,15 +8,26 @@ using WebApp.DAL.Entities;
 using Task = System.Threading.Tasks.Task;
 using System.Text.RegularExpressions;
 using WebApp.UI.ViewModels;
+using Swashbuckle.AspNetCore.Annotations;
+using Flurl.Http;
+using WebApp.DAL;
 
 namespace WebApp.UI.Controllers
 {
+    /// <summary>
+    /// Controller for demonstrating various functionalities including events, math operations, exceptions, blocks, advanced features, and regex operations.
+    /// </summary>
     public class DemoController : Controller
     {
         private readonly MathService _mathService;
         private double _lastResult;
         private readonly ILogger<DemoController> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DemoController"/> class.
+        /// </summary>
+        /// <param name="mathService">The math service for performing calculations.</param>
+        /// <param name="logger">The logger instance.</param>
         public DemoController(MathService mathService, ILogger<DemoController> logger)
         {
             _mathService = mathService;
@@ -30,11 +41,27 @@ namespace WebApp.UI.Controllers
             _logger.LogInformation("Calculation completed: {Result}", e.Result);
         }
 
+        /// <summary>
+        /// Displays the home page.
+        /// </summary>
+        /// <returns>The home view.</returns>
+        [HttpGet]
+        [Route("[Controller]")]
+        [SwaggerOperation(Summary = "Display Home Page", Description = "Returns the home view.")]
+        [SwaggerResponse(200, "Successfully retrieved the home view.", typeof(ViewResult))]
         public IActionResult Index()
         {
             return View();
         }
 
+        /// <summary>
+        /// Demonstrates event handling by performing a calculation.
+        /// </summary>
+        /// <returns>The event demonstration view with the last result.</returns>
+        [HttpGet]
+        [Route("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "Event Demonstration", Description = "Performs a calculation to trigger an event and displays the last result.")]
+        [SwaggerResponse(200, "Successfully retrieved the event demo view.", typeof(ViewResult))]
         public IActionResult EventDemo()
         {
             _mathService.PerformCalculation(10, 20); // triggers event
@@ -42,6 +69,14 @@ namespace WebApp.UI.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Demonstrates various math operations including logarithms, large number multiplication, and safe addition.
+        /// </summary>
+        /// <returns>The math demonstration view with computed results.</returns>
+        [HttpGet]
+        [Route("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "Math Demonstration", Description = "Performs various math operations and displays the results.")]
+        [SwaggerResponse(200, "Successfully retrieved the math demo view.", typeof(ViewResult))]
         public IActionResult MathDemo()
         {
             var advMath = new AdvancedMathService();
@@ -63,6 +98,14 @@ namespace WebApp.UI.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Demonstrates exception handling by validating a user email.
+        /// </summary>
+        /// <returns>The exception demonstration view with error messages if any.</returns>
+        [HttpGet]
+        [Route("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "Exception Demonstration", Description = "Validates a user email and handles exceptions.")]
+        [SwaggerResponse(200, "Successfully retrieved the exception demo view.", typeof(ViewResult))]
         public IActionResult ExceptionDemo()
         {
             var validationService = new UserValidationService();
@@ -78,6 +121,14 @@ namespace WebApp.UI.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Demonstrates the use of blocks, delegates, and LINQ operations.
+        /// </summary>
+        /// <returns>The blocks demonstration view with results.</returns>
+        [HttpGet]
+        [Route("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "Blocks Demonstration", Description = "Shows the use of blocks, delegates, and LINQ operations.")]
+        [SwaggerResponse(200, "Successfully retrieved the blocks demo view.", typeof(ViewResult))]
         public IActionResult BlocksDemo()
         {
             var results = new List<string>();
@@ -125,6 +176,13 @@ namespace WebApp.UI.Controllers
         }
 
 
+        /// Demonstrates advanced features including flags, bitwise operations, dynamic types, records, deconstruction, and logical patterns.
+        /// </summary>
+        /// <returns>The advanced demonstration view with results.</returns>
+        [HttpGet]
+        [Route("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "Advanced Demonstration", Description = "Shows advanced programming features such as flags, bitwise operations, dynamic types, records, deconstruction, and logical patterns.")]
+        [SwaggerResponse(200, "Successfully retrieved the advanced demo view.", typeof(ViewResult))]
         public IActionResult AdvancedDemo()
         {
             var results = new List<string>();
@@ -199,6 +257,16 @@ namespace WebApp.UI.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Performs a heavy computation asynchronously, supporting cancellation.
+        /// </summary>
+        /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+        /// <returns>The heavy computation view with the result or cancellation message.</returns>
+        [HttpGet]
+        [Route("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "Heavy Computation", Description = "Performs a CPU-bound heavy computation asynchronously.")]
+        [SwaggerResponse(200, "Successfully retrieved the heavy computation view.", typeof(ViewResult))]
+        [SwaggerResponse(500, "Internal server error.")]
         public async Task<IActionResult> HeavyComputation(CancellationToken cancellationToken)
         {
             try
@@ -234,6 +302,15 @@ namespace WebApp.UI.Controllers
                 return View();
             }
         }
+
+        /// <summary>
+        /// Demonstrates Task Parallel Library (TPL) by running multiple tasks concurrently.
+        /// </summary>
+        /// <returns>The TPL demonstration view with task results.</returns>
+        [HttpGet]
+        [Route("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "TPL Demonstration", Description = "Runs multiple tasks concurrently and displays their completion messages.")]
+        [SwaggerResponse(200, "Successfully retrieved the TPL demo view.", typeof(ViewResult))]
         public async Task<IActionResult> TplDemo()
         {
             var results = new List<string>();
@@ -270,14 +347,31 @@ namespace WebApp.UI.Controllers
             ViewBag.Results = results;
             return View();
         }
+
+        /// <summary>
+        /// Displays the regex demonstration view.
+        /// </summary>
+        /// <returns>The regex demonstration view with a <see cref="RegexDemoViewModel"/> model.</returns>
+        [HttpGet]
+        [Route("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "Regex Demonstration", Description = "Displays the regex demonstration view.")]
+        [SwaggerResponse(200, "Successfully retrieved the regex demo view.", typeof(ViewResult))]
         public IActionResult RegexDemo()
         {
             return View(new RegexDemoViewModel());
         }
 
-
+        /// <summary>
+        /// Processes the regex demonstration form submission.
+        /// </summary>
+        /// <param name="model">The regex demo view model containing user input.</param>
+        /// <returns>The regex demonstration view with updated results or validation errors.</returns>
         [HttpPost, ActionName("RegexDemo")]
+        [Route("[Controller]/[Action]")]
         [ValidateAntiForgeryToken]
+        [SwaggerOperation(Summary = "Process Regex Demo", Description = "Processes user input for regex operations and displays the results.")]
+        [SwaggerResponse(200, "Successfully processed the regex demo.", typeof(ViewResult))]
+        [SwaggerResponse(400, "Invalid input or regex pattern.")]
         public IActionResult RegexDemo(RegexDemoViewModel model)
         {
             if (!ModelState.IsValid)
@@ -344,5 +438,52 @@ namespace WebApp.UI.Controllers
 
             return View(model);
         }
+
+        /// <summary>
+        /// Displays the httpClient demonstration view.
+        /// </summary>
+        [HttpGet]
+        [Route("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "HTTP Client Demo", Description = "Demonstrates calling an external API using Flurl.")]
+        [SwaggerResponse(200, "Successfully retrieved data.", typeof(ViewResult))]
+        public async Task<IActionResult> HttpClientDemo()
+        {
+            var apiUrl = "https://api.github.com/repos/dotnet/runtime"; 
+                                                                        
+            var data = await apiUrl
+                .WithHeader("User-Agent", "MyWebApp")
+                .GetJsonAsync<dynamic>();
+
+            return View(data);
+        }
+
+        /// <summary>
+        /// Displays the Hangfire demonstration view.
+        /// </summary>
+        [HttpGet]
+        [Route("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "Task Scheduling Demo", Description = "Demonstrates scheduling a background task using Hangfire.")]
+        [SwaggerResponse(200, "Job scheduled and view displayed.", typeof(ViewResult))]
+        public IActionResult TaskSchedulingDemo()
+        {
+            var bgService = new BackgroundJobService();
+            bgService.EnqueueJob();
+            return View();
+        }
+
+        /// <summary>
+        /// Displays the transaction demonstration view.
+        /// </summary>
+        [HttpGet]
+        [Route("[Controller]/[Action]")]
+        [SwaggerOperation(Summary = "Transactions Demo", Description = "Demonstrates wrapping operations in a transaction for data consistency.")]
+        [SwaggerResponse(200, "Transaction processed.", typeof(ViewResult))]
+        public async Task<IActionResult> TransactionsDemo([FromServices] AppDbContext dbContext)
+        {
+            var transactionService = new TransactionService(dbContext);
+            await transactionService.UpdateMultipleEntitiesAsync();
+            return View();
+        }
+
     }
 }

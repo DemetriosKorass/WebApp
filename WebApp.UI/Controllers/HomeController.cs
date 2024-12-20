@@ -7,7 +7,7 @@ namespace WebApp.UI.Controllers
     /// Provides endpoints for home-related operations.
     /// </summary>
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [SwaggerTag("Home", "Endpoints for home operations")]
     public class HomeController : Controller
     {
